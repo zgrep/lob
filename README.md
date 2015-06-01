@@ -28,8 +28,8 @@ Terms:
 Useful Functions:
 
 - `set_random_book`
-- `set_init_random_book`
-    - Initialises `book` and then calls `set_random_book`.
+- `init_set_random_book`
+    - Does `mpz_init(book)` and then calls `set_random_book`.
 - `book2strbook`
 - `strbook2book`
 - `locbook2strbook`

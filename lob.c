@@ -192,20 +192,19 @@ int main() {
             // Really, I've gotta make a better system than this, I mean...
             // It really sucks. Need something better.
 
-    char strbook[num_chars + 1];
-    set_random_strbook(strbook);
-
-    mpz_t locbook;
+    mpz_t book, locbook;
+    init_set_random_book(book);
     mpz_init(locbook);
 
+    char strbook[num_chars + 1]; // + 1 is for null-terminated, plz
+    book2strbook(book, strbook);
+
     strbook2locbook(strbook, locbook);
-    
-    char strbook2[num_chars + 1];
-    locbook2strbook(locbook, strbook2);
 
+    printf("%s\n", strbook);
+
+    mpz_clear(book);
     mpz_clear(locbook);
-
-    printf("%s\n%s\n", strbook, strbook2);
 
     clean(); // always call right at the end of the program!
     return 0;   

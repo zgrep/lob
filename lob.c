@@ -1,29 +1,65 @@
 #include <stdio.h>
 #include <gmp.h>
 #include <string.h>
-#include <time.h> // for seeding from time, probably should be changed
+#include <time.h> // for seeding from time, probably should be changed to something with /dev/urandom
 
 static const unsigned int num_chars = 410 * 40 * 80 + 26;
+static const unsigned int num_base = 29; // if you change this, be sure to change strbook2str and friends.
+static const unsigned int loc_multiplier = 29; // must be coprime to max_book_plus_one. hint: use coprime_check() to find this! :)
+
+// DO NOT TOUCH THESE... please?
 mpz_t max_book_plus_one;
 gmp_randstate_t randstate;
+mpz_t inv_loc_multiplier;
 
-void init() {
-    char s[num_chars + 1];
-    memset(s, 's', num_chars);
-    s[num_chars] = '\0';
+unsigned long coprime_check(unsigned long num) {
+    mpz_t result;
+    mpz_init(result);
 
-    mpz_init_set_str(max_book_plus_one, s, 29);
-    mpz_add_ui(max_book_plus_one, max_book_plus_one, 1);
+    mpz_gcd_ui(result, max_book_plus_one, num);
+    unsigned long res = mpz_get_ui(result);
 
-    gmp_randinit_default(randstate);
-    gmp_randseed_ui(randstate, time(NULL));
+    mpz_clear(result);
+
+    return res;
 }
 
-void deinit() {
+void init() {
+    // make a maximum str that represents our last book
+    char s[num_chars + 1];
+    memset(s, 's', num_chars); // 's' depends on our alphabet. see strbook2book and str2strbook
+    s[num_chars] = '\0';
+
+    mpz_init_set_str(max_book_plus_one, s, num_base);
+    // --------------------------------------------------------------------------------------------
+
+    // initialize random number generate, to generate random book
+    gmp_randinit_default(randstate);
+    gmp_randseed_ui(randstate, time(NULL)); // probably should be changed to /dev/urandom or something, but who cares? :P
+
+    // --------------------------------------------------------------------------------------------
+
+    if (loc_multiplier == 0 || coprime_check(loc_multiplier) != 1) {
+        mpz_set_ui(inv_loc_multiplier, 0);
+    } else {
+        mpz_t locmul;
+        mpz_init_set_ui(locmul, loc_multiplier);
+
+        mpz_invert(inv_loc_multiplier, locmul, max_book_plus_one);
+
+        mpz_clear(locmul);
+    }
+
+}
+
+void clean() {
+    // clean up stuff from above
     mpz_clear(max_book_plus_one);
+    mpz_clear(inv_loc_multiplier);
     gmp_randclear(randstate);
 }
 
+// left-pads a string with a specified character pad
 void leftpad(char *str, char pad) {
     int len = num_chars - strlen(str);
     if (len) {
@@ -33,6 +69,8 @@ void leftpad(char *str, char pad) {
 }
 
 int strbook2str(char *strbook, char *str) {
+    leftpad(strbook, 't');
+
     while (*strbook) {
         if (*strbook == ' ') {
             *str = '9';
@@ -54,11 +92,12 @@ int strbook2str(char *strbook, char *str) {
     }
 
     *str = '\0';
-    leftpad(str, '0');
     return 0;
 }
 
 int str2strbook(char *str, char *strbook) {
+    leftpad(str, '0');
+
     while (*str) {
         if(*str == '9') {
             *strbook = ' ';
@@ -80,7 +119,6 @@ int str2strbook(char *str, char *strbook) {
     }
 
     *strbook = '\0';
-    leftpad(str, 't');
     return 0;
 }
 
@@ -95,14 +133,14 @@ void init_set_random_book(mpz_t book) {
 
 void book2strbook(mpz_t book, char *strbook) {
     char str[num_chars + 1];
-    mpz_get_str(str, 29, book);
+    mpz_get_str(str, num_base, book);
     str2strbook(str, strbook);
 }
 
 void strbook2book(char *strbook, mpz_t book) {
     char str[num_chars + 1];
     strbook2str(strbook, str);
-    mpz_set_str(book, str, 29);
+    mpz_set_str(book, str, num_base);
 }
 
 void set_random_strbook(char *strbook) {
@@ -114,31 +152,61 @@ void set_random_strbook(char *strbook) {
 
 void strbook2locbook(char *strbook, mpz_t locbook) {
     char locstrbook[num_chars + 1];
-    for (int i = 0, j = num_chars, k = 0; i < j; i++, j--, k+=2) {
+    for (int i = 0, j = num_chars - 1, k = 0; i <= j; i++, j--, k+=2) {
         locstrbook[k] = strbook[i];
         if (i != j) {
             locstrbook[k+1] = strbook[j];
         }
     }
+    locstrbook[num_chars] = '\0';
     strbook2book(locstrbook, locbook);
-    mpz_mul_ui(locbook, locbook, 7);
-    mpz_add_ui(locbook, locbook, 
+
+    mpz_mul_ui(locbook, locbook, loc_multiplier);
+    mpz_mod(locbook, locbook, max_book_plus_one);
 }
 
-void book2locbook(mpz_t book, mpz_t locbook) {
-    char strbook[num_chars + 1];
-    book2strbook(book, strbook);
-    strbook2locbook(strbook, locbook);
+void locbook2strbook(mpz_t locbook, char *strbook) {
+    mpz_t book;
+    mpz_init(book);
+
+    mpz_mul(book, locbook, inv_loc_multiplier);
+    mpz_mod(book, book, max_book_plus_one);
+
+    char locstrbook[num_chars + 1];
+    book2strbook(book, locstrbook);
+
+    mpz_clear(book);
+
+    for (int i = 0, j = num_chars - 1, k = 0; i <= j; i++, j--, k+=2) {
+        strbook[i] = locstrbook[k];
+        if (i != j) {
+            strbook[j] = locstrbook[k+1];
+        }
+    }
+
+    strbook[num_chars] = '\0';
 }
 
 int main() {
-    init();
+    init(); // Always call in beginning!
+            // Really, I've gotta make a better system than this, I mean...
+            // It really sucks. Need something better.
 
     char strbook[num_chars + 1];
     set_random_strbook(strbook);
 
-    printf("%s", strbook);
+    mpz_t locbook;
+    mpz_init(locbook);
 
-    deinit();
+    strbook2locbook(strbook, locbook);
+    
+    char strbook2[num_chars + 1];
+    locbook2strbook(locbook, strbook2);
+
+    mpz_clear(locbook);
+
+    printf("%s\n%s\n", strbook, strbook2);
+
+    clean(); // always call right at the end of the program!
     return 0;   
 }

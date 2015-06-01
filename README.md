@@ -7,6 +7,11 @@ See http://libraryofbabel.info for more information.
 
 This contains some things I should probably detail here.
 
+Requirements:
+
+- You need `gcc`. I mean, this should be expected.
+- Also `gmp`, which is [this thing](http://gmplib.org).
+
 Terms:
 
 - `loc`

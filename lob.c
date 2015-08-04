@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h> // for seeding from time, probably should be changed to something with /dev/urandom
 
-static const unsigned int num_chars = 410 * 40 * 80 + 26;
+static const unsigned int num_chars = 410 * 40 * 80 + 26; // pages * lines * characters per line + title
 static const unsigned int num_base = 29; // if you change this, be sure to change strbook2str and friends.
 static const unsigned int loc_multiplier = 29; // must be coprime to max_book_plus_one. hint: use coprime_check() to find this! :)
 
@@ -12,6 +12,7 @@ mpz_t max_book_plus_one;
 gmp_randstate_t randstate;
 mpz_t inv_loc_multiplier;
 
+// This is what you use to help you pick a loc_multiplier. Well, can. You don't have to.
 unsigned long coprime_check(unsigned long num) {
     mpz_t result;
     mpz_init(result);
@@ -194,7 +195,7 @@ int main() {
     init_set_random_book(book);
     mpz_init(locbook);
 
-    char strbook[num_chars + 1]; // + 1 is for null-terminated, plz
+    char strbook[num_chars + 1]; // + 1 is for null-terminated
     book2strbook(book, strbook);
 
     strbook2locbook(strbook, locbook);

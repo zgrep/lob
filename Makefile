@@ -1,4 +1,4 @@
-all: clean lob
+all: lob
 
 lob:
 	cc lob.c -lgmp -o lob

@@ -5,5 +5,3 @@ lob:
 
 clean:
 	rm lob
-	
-# vim: set noexpandtab:

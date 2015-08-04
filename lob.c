@@ -189,8 +189,6 @@ void locbook2strbook(mpz_t locbook, char *strbook) {
 
 int main() {
     init(); // Always call in beginning!
-            // Really, I've gotta make a better system than this, I mean...
-            // It really sucks. Need something better.
 
     mpz_t book, locbook;
     init_set_random_book(book);
@@ -206,6 +204,6 @@ int main() {
     mpz_clear(book);
     mpz_clear(locbook);
 
-    clean(); // always call right at the end of the program!
+    clean(); // Always call right at the end of the program!
     return 0;   
 }

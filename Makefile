@@ -1,7 +1,7 @@
 all: clean lob
 
 lob:
-	gcc lob.c -lgmp -o lob
+	cc lob.c -lgmp -o lob
 
 clean:
 	rm lob
